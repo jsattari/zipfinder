@@ -16,3 +16,11 @@ repos:
     rev: 3f92c8d
     hooks:
     -   id: autopep8
+-   repo: https://github.com/motet-a/jinjalint
+    rev: 01e0a4d
+    hooks:
+    -   id: jinjalint
+-   repo: https://github.com/pre-commit/mirrors-csslint
+    rev: ad9b0d7
+    hooks:
+    -   id: csslint
