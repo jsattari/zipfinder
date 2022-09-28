@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-from flask import Flask, flash, request, redirect, url_for, render_template
+from flask import Flask, request, \
+    redirect, url_for, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 import tools as tools
 import os
+import csv
 
-
-UPLOAD_FOLDER = "/static"
-ALLOWED_EXTENSIONS = {"txt", "csv", "xlsx"}
+UPLOAD_FOLDER = "uploads"
+ALLOWED_EXTENSIONS = ["txt", "csv"]
 
 # app object
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1000 * 10
 
 
 @app.route("/")
@@ -21,25 +23,36 @@ def home():
     return render_template("index.html")
 
 
-@app.route("/bulk", methods=["GET", "POST"])
+@app.route("/bulk")
 def bulk():
-    if request.method == "POST":
-        if "file" not in request.files:
-            flash("No file part")
-            return redirect(request.url)
-        file = request.files["file"]
-
-        if file.filename == "":
-            flash("No selected file")
-            return redirect(request.url)
-
-        if file and tools.allowed_file(file.filename, ALLOWED_EXTENSIONS):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config["UPLOADER_FOLDER"], filename))
-            return redirect(url_for('download_file', name=filename))
-
     return render_template("bulk.html")
 
 
+@app.route("/bulk", methods=["POST"])
+def upload_bulk_file():
+    uploaded_file = request.files["file"]
+    filename = secure_filename(uploaded_file.filename)
+
+    if tools.allowed_file(filename, ALLOWED_EXTENSIONS):
+        uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+    return redirect(url_for("bulk"))
+
+
+@app.route('/uploads/<filename>')
+def upload(filename):
+
+    with open(
+        os.path.join(
+            app.config['UPLOAD_FOLDER'], filename), "r") as data_file:
+
+        reader = csv.reader(data_file)
+        data = dict(reader)
+
+        print(data)
+
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
