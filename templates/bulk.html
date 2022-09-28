@@ -13,18 +13,15 @@
     <h1>ZIP FINDER</h1>
     <h2>Upload your bulk file below...</h2>
 
-    <form action="action_to_perform_after_submission" method="POST">
-        <p>
-            <input type="text" name="field1_name" />
-        </p>
-        <p>
-            <input type="submit" value="submit" />
-        </p>
-        <p>
-            <button id="Enter" type="button" class="button">
-                <a href="{{ url_for('home') }}">Single Address Lookup</a>
-            </button>
-        </p>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Get Zip Codes">
+    </form>
+    <p>
+        <button id="Enter" type="button" class="button">
+            <a href="{{ url_for('home') }}">Single Address Lookup</a>
+        </button>
+    </p>
     </form>
 </body>
 
