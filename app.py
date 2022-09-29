@@ -5,7 +5,7 @@ from flask import Flask, request, \
     render_template, Response
 import tools as tools
 import csv
-from io import BytesIO
+from io import BytesIO, StringIO
 
 ALLOWED_EXTENSIONS = ["txt", "csv"]
 
@@ -41,15 +41,33 @@ def upload_bulk_file():
         buffer.seek(0)
 
     reader = csv.reader(buffer.getvalue().decode("UTF-8"))
+
     data = list(reader)
-    print(data[0])
+
+    zipped_data = list(zip(range(0, len(data)), data))
+
+    data_dict = {}
+
+    for tupe in zipped_data:
+        if tupe[1]:
+            data_dict[tupe[0]] = [tupe[1][0], "new_val"]
+
+    csvfile = StringIO()
+    writer = csv.writer(csvfile)
+
+    for value in data_dict.values():
+        writer.writerow([value[0], value[1]])
+
+    csvfile.seek(0)
 
     # return buffer object as downloadable file
     return Response(
-        buffer.getvalue(),
+        csvfile.getvalue(),
         mimetype="text/plain",
         headers={
-            "Content-Disposition": "attachment;filename=results.csv"})
+            "Content-Disposition": "attachment;filename=results.csv"}), \
+        buffer.close(), \
+        csvfile.close()
 
 
 if __name__ == "__main__":
