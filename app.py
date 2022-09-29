@@ -2,19 +2,16 @@
 # -*- coding:utf-8 -*-
 
 from flask import Flask, request, \
-    redirect, url_for, render_template, send_from_directory
-from werkzeug.utils import secure_filename
+    render_template, Response
 import tools as tools
-import os
 import csv
+from io import BytesIO
 
-UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = ["txt", "csv"]
 
 # app object
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1000 * 10
+app.config["MAX_CONTENT_LENGTH"] = 1024 * 512
 
 
 @app.route("/")
@@ -25,33 +22,34 @@ def home():
 
 @app.route("/bulk")
 def bulk():
+    # create bulk upload route
     return render_template("bulk.html")
 
 
 @app.route("/bulk", methods=["POST"])
 def upload_bulk_file():
+
+    # find uploaded file object
     uploaded_file = request.files["file"]
-    filename = secure_filename(uploaded_file.filename)
 
-    if tools.allowed_file(filename, ALLOWED_EXTENSIONS):
-        uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    # create file buffer object
+    buffer = BytesIO()
 
-    return redirect(url_for("bulk"))
+    # if filename is valid, insert into buffer
+    if tools.allowed_file(uploaded_file.filename, ALLOWED_EXTENSIONS):
+        uploaded_file.save(buffer)
+        buffer.seek(0)
 
+    reader = csv.reader(buffer.getvalue().decode("UTF-8"))
+    data = list(reader)
+    print(data[0])
 
-@app.route('/uploads/<filename>')
-def upload(filename):
-
-    with open(
-        os.path.join(
-            app.config['UPLOAD_FOLDER'], filename), "r") as data_file:
-
-        reader = csv.reader(data_file)
-        data = dict(reader)
-
-        print(data)
-
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    # return buffer object as downloadable file
+    return Response(
+        buffer.getvalue(),
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment;filename=results.csv"})
 
 
 if __name__ == "__main__":
