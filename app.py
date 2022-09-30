@@ -40,10 +40,13 @@ def upload_bulk_file():
     if tools.allowed_file(uploaded_file.filename, ALLOWED_EXTENSIONS):
         uploaded_file.save(buffer)
         buffer.seek(0)
+
+        # if file is too large, go to error page
         if buffer.seek(0, os.SEEK_END) > MAX_CONTENT_LENGTH:
             return render_template("too_large.html")
 
     else:
+        # if file extension is not accepted, go to this page
         return render_template("bad_filename.html")
 
     # read file into file buffer using csv reader
@@ -58,16 +61,20 @@ def upload_bulk_file():
     # create empty dict for new data
     data_dict = {}
 
+    # loop through zipped data and query each address
     for tupe in zipped_data:
         if tupe[1]:
             data_dict[tupe[0]] = [tupe[1][0], "new_val"]
 
+    # create string file buffer
     csvfile = StringIO()
     writer = csv.writer(csvfile)
 
+    # parse values from data_dict into file buffer
     for value in data_dict.values():
         writer.writerow([value[0], value[1]])
 
+    # go to start of string file buffer
     csvfile.seek(0)
 
     # return buffer object as downloadable file
