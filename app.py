@@ -5,13 +5,14 @@ from flask import Flask, request, \
     render_template, Response
 import tools as tools
 import csv
+import os
 from io import BytesIO, StringIO
 
 ALLOWED_EXTENSIONS = ["txt", "csv"]
+MAX_CONTENT_LENGTH = 524288
 
 # app object
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 1024 * 512
 
 
 @app.route("/")
@@ -39,13 +40,22 @@ def upload_bulk_file():
     if tools.allowed_file(uploaded_file.filename, ALLOWED_EXTENSIONS):
         uploaded_file.save(buffer)
         buffer.seek(0)
+        if buffer.seek(0, os.SEEK_END) > MAX_CONTENT_LENGTH:
+            return render_template("too_large.html")
 
+    else:
+        return render_template("bad_filename.html")
+
+    # read file into file buffer using csv reader
     reader = csv.reader(buffer.getvalue().decode("UTF-8"))
 
+    # turn reader object into list
     data = list(reader)
 
+    # zip data with numerical range
     zipped_data = list(zip(range(0, len(data)), data))
 
+    # create empty dict for new data
     data_dict = {}
 
     for tupe in zipped_data:
