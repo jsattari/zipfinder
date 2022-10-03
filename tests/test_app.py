@@ -21,7 +21,9 @@ def test_allowed_file(filename, result):
          "123 Fake Street", "Springfield", "IL"]),
         ("40 Terrace, westerfield, CA", ["40 Terrace", "westerfield", "CA"]),
         ("400 W Fake St #300, Los Santos, CA 66666",
-         ["400 W Fake St #300", "Los Santos", "CA"])
+         ["400 W Fake St #300", "Los Santos", "CA"]),
+        ("1732 Evergreen Terrace, St. Paul, MN", [
+         "1732 Evergreen Terrace", "St. Paul", "MN"])
     ]
 )
 def test_is_address(address, results):
@@ -39,5 +41,5 @@ def test_is_address_error2():
 
 
 def test_is_address_error3():
-    with pytest.raises(ValueError):
-        is_address("91702")
+    with pytest.raises(TypeError):
+        is_address(91702)

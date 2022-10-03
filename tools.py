@@ -32,11 +32,19 @@ def is_address(addy: str) -> list:
     """
 
     pattern = \
-        r"(^\d+\s{1}[\s?a-zA-Z0-9\#]+)\W{2}([a-zA-Z\s]+)\W{2}([a-zA-Z]{0,2})"
+        r"(^\d+\s{1}[\s?a-zA-Z0-9\#.]+)\W{1,2}([a-zA-Z\s.]+)\W{1,2}([a-zA-Z]{0,2})"  # noqa: E501
 
     try:
-        street, city, state = re.findall(pattern, addy)[0]
-        return [street, city, state]
+        parsed = re.findall(pattern, addy)
+        print(parsed)
 
-    except ValueError:
-        raise ValueError("String is not recognized as an address")
+    except TypeError:
+        raise TypeError()
+
+    else:
+        if len(parsed) == 0:
+            raise ValueError("Unable to parse address")
+
+        else:
+            street, city, state = parsed[0]
+            return [street, city, state]
