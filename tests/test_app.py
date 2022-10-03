@@ -17,13 +17,13 @@ def test_allowed_file(filename, result):
 @pytest.mark.parametrize(
     "address, results",
     [
-        ("123 Fake Street, Springfield, IL", [
-         "123 Fake Street", "Springfield", "IL"]),
-        ("40 Terrace, westerfield, CA", ["40 Terrace", "westerfield", "CA"]),
+        ("123 Fake Street, Springfield, IL",
+         ("123 Fake Street", "Springfield", "IL")),
+        ("40 Terrace, westerfield, CA", ("40 Terrace", "westerfield", "CA")),
         ("400 W Fake St #300, Los Santos, CA 66666",
-         ["400 W Fake St #300", "Los Santos", "CA"]),
-        ("1732 Evergreen Terrace, St. Paul, MN", [
-         "1732 Evergreen Terrace", "St. Paul", "MN"])
+         ("400 W Fake St #300", "Los Santos", "CA")),
+        ("1732 Evergreen Terrace, St. Paul, MN",
+         ("1732 Evergreen Terrace", "St. Paul", "MN"))
     ]
 )
 def test_is_address(address, results):
