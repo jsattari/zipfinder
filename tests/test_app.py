@@ -1,57 +1,47 @@
 import pytest
-from tools import allowed_file, is_address, get_single
+from tools import allowed_file, get_address_values
 
 
 @pytest.mark.parametrize(
-    "filename, result",
+    "filename, results",
     [
         ("data.csv", True),
         ("data.txt", True),
         ("testing.pdf", False),
         ("testing.co.uk", False)
     ])
-def test_allowed_file(filename, result):
-    assert allowed_file(filename, ["csv", "txt"]) == result
+def test_allowed_file(filename, results):
+    assert allowed_file(filename, ["csv", "txt"]) == results
 
 
 @pytest.mark.parametrize(
     "address, results",
     [
-        ("123 Fake Street, Springfield, IL",
-         ("123 Fake Street", "Springfield", "IL")),
-        ("40 Terrace, westerfield, CA", ("40 Terrace", "westerfield", "CA")),
-        ("400 W Fake St #300, Los Santos, CA 66666",
-         ("400 W Fake St #300", "Los Santos", "CA")),
-        ("1732 Evergreen Terrace, St. Paul, MN",
-         ("1732 Evergreen Terrace", "St. Paul", "MN"))
+        (["123 Fake Street, Springfield, IL"],
+         [("123 Fake Street", "Springfield", "IL")]),
+        (["40 Terrace, westerfield, CA"],
+         [("40 Terrace", "westerfield", "CA")]),
+        (["400 W Fake St #300, Los Santos, CA 66666"],
+         [("400 W Fake St #300", "Los Santos", "CA")]),
+        (["123 Fake Street, Springfield, IL", "40 Terrace, westerfield, CA"],
+         [("123 Fake Street", "Springfield", "IL"),
+         ("40 Terrace", "westerfield", "CA")])
     ]
 )
-def test_is_address(address, results):
-    assert is_address(address) == results
+def test_get_address_values(address, results):
+    assert get_address_values(address) == results
 
 
-@pytest.mark.parametrize(
-    "list_tupe, output",
-    [
-        (("6000 Santa Monica Blvd.", "Los Angeles", "CA"), "90038-1864"),
-        (("205 East Houston Street", "Manhattan", "NY"), "10002-1017"),
-        (("2121 E 7th Pl", "Los Angeles", "CA"), "90021-1755")
-    ]
-)
-def test_get_single(list_tupe, output):
-    assert get_single(list_tupe) == output
+def test_get_address_values_error():
+    assert get_address_values(["cnn.com"]) == [
+        "Address value could not be parsed into street, city, state strings"]
 
 
-def test_is_address_error():
-    with pytest.raises(ValueError):
-        is_address("cnn.com")
+def test_get_address_values_error2():
+    assert get_address_values(["los angeles, ca"]) == [
+        "Address value could not be parsed into street, city, state strings"]
 
 
-def test_is_address_error2():
-    with pytest.raises(ValueError):
-        is_address("los angeles, ca")
-
-
-def test_is_address_error3():
+def test_get_address_values_error3():
     with pytest.raises(TypeError):
-        is_address(91702)
+        get_address_values(91702)

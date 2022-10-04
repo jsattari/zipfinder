@@ -29,67 +29,118 @@ def allowed_file(filename: str, verification_list: list) -> bool:
            filename.rsplit('.', 1)[1].lower() in verification_list
 
 
-def is_address(addy: str) -> tuple:
+def get_address_values(addy_list: list) -> list:
     """
-    Parses string address value to find street, city, and name
+    Parses list of string address value to find street, city, and name
 
     Inputs:
-        addy (str):                 assumed address string
+        addy (list):                list structure containing address strings
 
     Return (list):                  returns list containing 3 str elements
                                     containing street, city, state
     """
 
+    # pattern for parsing address in "street, city, state" format
+    # zip codes can be included as it will not cause parsing issues
+    # commas are used as delimiters
     pattern = \
         r"(^\d+\s{1}[\s?a-zA-Z0-9\#.]+)\W{1,2}([a-zA-Z\s.]+)\W{1,2}([a-zA-Z]{0,2})"  # noqa: E501
 
-    try:
-        parsed = re.findall(pattern, addy)
-        print(parsed)
+    # creat empty data structure to house output
+    parsed_list = []
 
-    except TypeError:
-        raise TypeError("Value is not an address-like string")
+    # iterate through input list
+    for addy in addy_list:
+        # try to apply regex, return errors if address string is not compatible
+        try:
+            parsed = re.findall(pattern, addy)[0]
 
-    else:
-        if len(parsed) == 0:
-            raise ValueError("Unable to parse address")
+        except TypeError:
+            parsed = "Value is not an address-like string"
+
+        except ValueError:
+            parsed = "Unable to parse address"
+
+        except IndexError:
+            parsed = \
+                "Address value could not be parsed into street\
+                    , city, state strings"
+
+        finally:
+            parsed_list.append(parsed)
+
+    return parsed_list
+
+
+def get_xml(parsed_addresses: list, user_id=USER_ID) -> str:
+    """
+    Uses values from tuple containing address to make a single API call
+    for zip5 and zip4 values
+
+    Inputs:
+        address (list):                 list of tuples containing \
+            street, city, state \
+                values in str format
+        user_id (str):                  default argument for user \
+            id for api endpoint
+
+    Return (str):                       returns string containing \
+        zip5 and zip4 values
+    """
+
+    xml_addys = '<?xml version="1"?>'
+    counter = 0
+
+    for addy in parsed_addresses:
+
+        if isinstance(addy, tuple):
+
+            mini_xml = f'''\
+                <Address ID="{counter}">
+                    <Address1>{addy[0]}</Address1>
+                    <Address2></Address2>
+                    <City>{addy[1]}</City>
+                    <State>{addy[2]}</State>
+                    <Zip5></Zip5>
+                    <Zip4/>
+                </Address>'''
+
+            xml_addys += mini_xml
+            counter += 1
 
         else:
-            return parsed[0]
+            pass
+
+    xml_addys += '</AddressValidateRequest>'
+
+    xml_formatted_addys = xml_addys.replace("\n", "").replace("\t", "")
+
+    return xml_formatted_addys
 
 
-def get_single(address: tuple, user_id=USER_ID) -> str:
-    request_xml = f'''\
-    <?xml version="1"?>
-        <AddressValidateRequest USERID="{user_id}">
-            <Revision>1</Revision>
-            <Address ID="0">
-                <Address1>{address[0]}</Address1>
-                <Address2></Address2>
-                <City>{address[1]}</City>
-                <State>{address[2]}</State>
-                <Zip5></Zip5>
-                <Zip4/>
-            </Address>
-        </AddressValidateRequest>'''
+def get_zips(xml_str: str) -> list:
 
-    # print(f"=== GETTING ZIP FOR {address[0]}, {address[1]}, {address[2]} ===") # noqa: E501
+    # parse
+    quoted_request_str = urllib.parse.quote_plus(xml_str)
 
-    request_str = request_xml.replace(
-        "\n", "").replace("\t", "")
-
-    quoted_request_str = urllib.parse.quote_plus(request_str)
-
+    # create variable containing request url
     request_url = \
         "https://production.shippingapis.com/ShippingAPI.dll?API=Verify&XML=" + quoted_request_str  # noqa: E501
 
+    # make request
     response = urllib.request.urlopen(request_url)
 
+    # read response contents into variable
     contents = response.read()
 
+    # read xml response structure
     root = et.fromstring(contents)
 
-    zip5, zip4 = root.findall("Address")[0].find("Zip5").text, \
-        root.findall("Address")[0].find("Zip4").text
+    # create output list
+    output = []
 
-    return f"{zip5}-{zip4}"
+    # parse out zip5 and zip4 values and add to output list
+    for struct in root.findall("address"):
+        output.append(f"{struct.find('Zip5').text}-{struct.find('Zip4').text}")
+
+    return output
