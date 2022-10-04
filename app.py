@@ -21,6 +21,18 @@ def home():
     return render_template("index.html")
 
 
+@app.route("/", methods=["POST"])
+def single_address_finder():
+    # single address request route
+    text = request.form['field1_name']
+
+    address_tup = tools.is_address(text)
+
+    single_zip = tools.get_single(address_tup)
+
+    return single_zip
+
+
 @app.route("/bulk")
 def bulk():
     # create bulk upload route

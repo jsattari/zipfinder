@@ -72,9 +72,8 @@ def get_single(address: tuple, user_id=USER_ID) -> str:
                 <Zip4/>
             </Address>
         </AddressValidateRequest>'''
-    print(request_xml)
 
-    print(f"=== GETTING ZIP FOR {address[0]}, {address[1]}, {address[2]} ===")
+    # print(f"=== GETTING ZIP FOR {address[0]}, {address[1]}, {address[2]} ===") # noqa: E501
 
     request_str = request_xml.replace(
         "\n", "").replace("\t", "")
@@ -90,7 +89,7 @@ def get_single(address: tuple, user_id=USER_ID) -> str:
 
     root = et.fromstring(contents)
 
-    for address in root.findall("Address"):
-        zip5, zip4 = address.find("Zip5").text, address.find("Zip4").text
+    zip5, zip4 = root.findall("Address")[0].find("Zip5").text, \
+        root.findall("Address")[0].find("Zip4").text
 
     return f"{zip5}-{zip4}"
