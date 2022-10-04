@@ -60,32 +60,37 @@ def is_address(addy: str) -> tuple:
 
 def get_single(address: tuple, user_id=USER_ID) -> str:
     request_xml = f'''\
-        <?xml version="1"?>
+    <?xml version="1"?>
         <AddressValidateRequest USERID="{user_id}">
             <Revision>1</Revision>
             <Address ID="0">
-            <Address1>{address[0]}</Address1>
-            <Address2></Address2>
-            <City>{address[1]}</City>
-            <State>{address[2]}</State>
-            <Zip5></Zip5>
-            <Zip4/>
+                <Address1>{address[0]}</Address1>
+                <Address2></Address2>
+                <City>{address[1]}</City>
+                <State>{address[2]}</State>
+                <Zip5></Zip5>
+                <Zip4/>
             </Address>
         </AddressValidateRequest>'''
+    print(request_xml)
 
     print(f"=== GETTING ZIP FOR {address[0]}, {address[1]}, {address[2]} ===")
 
-    request_str = request_xml.replace("\n", "").replace("\t", "")
+    request_str = request_xml.replace(
+        "\n", "").replace("\t", "")
+
+    quoted_request_str = urllib.parse.quote_plus(request_str)
 
     request_url = \
-        "https://production.shippingapis.com/ShippingAPI.dll?API=Verify&XML=" \
-        + request_str
+        "https://production.shippingapis.com/ShippingAPI.dll?API=Verify&XML=" + quoted_request_str  # noqa: E501
 
-    response = urllib.request.urlopen(request_url).read()
+    response = urllib.request.urlopen(request_url)
 
-    root = et.fromstring(response)
+    contents = response.read()
 
-    zip5, zip4 = root.findall('Address')[0].find(
-        'Zip5').text, root.findall('Address')[0].find('Zip4').text
+    root = et.fromstring(contents)
+
+    for address in root.findall("Address"):
+        zip5, zip4 = address.find("Zip5").text, address.find("Zip4").text
 
     return f"{zip5}-{zip4}"

@@ -1,5 +1,5 @@
 import pytest
-from tools import allowed_file, is_address
+from tools import allowed_file, is_address, get_single
 
 
 @pytest.mark.parametrize(
@@ -28,6 +28,18 @@ def test_allowed_file(filename, result):
 )
 def test_is_address(address, results):
     assert is_address(address) == results
+
+
+@pytest.mark.parametrize(
+    "list_tupe, output",
+    [
+        (("6000 Santa Monica Blvd.", "Los Angeles", "CA"), "90038-1864"),
+        (("205 East Houston Street", "Manhattan", "NY"), "10002-1017"),
+        (("2121 E 7th Pl", "Los Angeles", "CA"), "90021-1755")
+    ]
+)
+def test_get_single(list_tupe, output):
+    assert get_single(list_tupe) == output
 
 
 def test_is_address_error():
