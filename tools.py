@@ -72,7 +72,7 @@ def get_address_values(addy_list: list) -> list:
     return parsed_list
 
 
-def get_xml(parsed_addresses: list, user_id=USER_ID) -> str:
+def get_xml(parsed_addresses: list) -> str:
     """
     Uses values from tuple containing address to make a single API call
     for zip5 and zip4 values
@@ -88,39 +88,69 @@ def get_xml(parsed_addresses: list, user_id=USER_ID) -> str:
         zip5 and zip4 values
     """
 
-    xml_addys = f'<?xml version="1"?>\n\t<AddressValidateRequest USERID="{user_id}">\n\t\t<Revision>1</Revision>'  # noqa: E501
+    # create a counter to determine version number
     counter = 0
+    output = [""] * len(parsed_addresses)
 
-    for addy in parsed_addresses:
+    # loop through parsed address input list
+    for key, value in enumerate(parsed_addresses):
 
-        if isinstance(addy, tuple):
+        # if current value is a tuple, add xml structure to string
+        if isinstance(value, tuple):
             mini_xml = f'''\
                 <Address ID="{counter}">
-                    <Address1>{addy[0]}</Address1>
+                    <Address1>{value[0]}</Address1>
                     <Address2></Address2>
-                    <City>{addy[1]}</City>
-                    <State>{addy[2]}</State>
+                    <City>{value[1]}</City>
+                    <State>{value[2]}</State>
                     <Zip5></Zip5>
                     <Zip4/>
                 </Address>'''
 
-            xml_addys = xml_addys + mini_xml
+            # append xml structure to output xml string
+            # increment counter
+            output[key] = mini_xml
             counter += 1
 
         else:
-            counter += 1
+            output[key] = value
 
+    return output
+
+
+def get_zips(xml_str: list, user_id=USER_ID) -> list:
+    """
+    Parses xml string input and makes request to api for zip codes
+
+    Inputs
+        xml_str (list):                 list of unformatted xml strings \
+            with newlines and tab spaces removed
+
+    Return (list):                      list of api responses\
+        that are zip codes
+    """
+    # create output list
+    output = [0] * len(xml_str)
+
+    # begin xml structured string
+    xml_addys = \
+        f'<?xml version="1"?>\n\t<AddressValidateRequest USERID="{user_id}">\n\t\t<Revision>1</Revision>'  # noqa: E501
+
+    for key, value in enumerate(xml_str):
+        if "\n" in value:
+            xml_addys = xml_addys + value
+
+        else:
+            output[key] = value
+
+    # close xml string
     xml_addys = xml_addys + '\n</AddressValidateRequest>'
 
+    # format xml to remove newlines and tab spaces
     xml_formatted_addys = xml_addys.replace("\n", "").replace("\t", "")
 
-    return xml_formatted_addys
-
-
-def get_zips(xml_str: str) -> list:
-
-    # parse
-    quoted_request_str = urllib.parse.quote_plus(xml_str)
+    # parse xml
+    quoted_request_str = urllib.parse.quote_plus(xml_formatted_addys)
 
     # create variable containing request url
     request_url = \
@@ -135,11 +165,25 @@ def get_zips(xml_str: str) -> list:
     # read xml response structure
     root = et.fromstring(contents)
 
-    # create output list
-    output = []
+    # create counter to iterate through root xml response
+    # create variable to house iteration of Address response
+    counter = 0
+    zips = root.findall("Address")[counter]
 
-    # parse out zip5 and zip4 values and add to output list
-    for struct in root.findall("Address"):
-        output.append(f"{struct.find('Zip5').text}-{struct.find('Zip4').text}")
+    # loop through values in length of output array
+    for num in range(len(output)):
+
+        # if element is 0, then replace it with
+        # the 9 digit zip code
+        if output[num] == 0:
+            output[num] = f"{zips[counter].find('Zip5').text}" + \
+                "-" + f"{zips[counter].find('Zip4').text}"
+            # increment counter
+            counter += 1
+
+        else:
+            # else element should already have an error string
+            # associated with it
+            continue
 
     return output
