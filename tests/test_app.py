@@ -43,5 +43,10 @@ def test_get_address_values_error2():
 
 
 def test_get_address_values_error3():
+    assert get_address_values(["couch, LA"]) == [
+        "Address value could not be parsed into street, city, state strings"]
+
+
+def test_get_address_values_error4():
     with pytest.raises(TypeError):
         get_address_values(91702)
