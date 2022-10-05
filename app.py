@@ -24,13 +24,28 @@ def home():
 @app.route("/", methods=["POST"])
 def single_address_finder():
     # single address request route
-    text = request.form['field1_name']
+    text = [request.form['field1_name']]
 
-    address_tup = tools.is_address(text)
+    try:
+        # check address
+        address_tup = tools.get_address_values(text)
 
-    single_zip = tools.get_single(address_tup)
+    except Exception as e:
+        zip_codes = f"Oh no! An error occured: {e}"
 
-    return single_zip
+    else:
+        # if address check is a string, return the error
+        if isinstance(address_tup[0], str):
+            return address_tup[0]
+
+        else:
+            # turn tuple of address values into xml
+            xml_str = tools.get_xml(address_tup)
+
+            # query with xml
+            zip_codes = tools.get_zips(xml_str)
+
+    return render_template("index.html", zip_codes=zip_codes[0])
 
 
 @app.route("/bulk")

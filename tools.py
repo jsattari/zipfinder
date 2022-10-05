@@ -51,6 +51,7 @@ def get_address_values(addy_list: list) -> list:
 
     # iterate through input list
     for addy in addy_list:
+
         # try to apply regex, return errors if address string is not compatible
         try:
             parsed = re.findall(pattern, addy)[0]
@@ -63,8 +64,7 @@ def get_address_values(addy_list: list) -> list:
 
         except IndexError:
             parsed = \
-                "Address value could not be parsed into street\
-                    , city, state strings"
+                "Address value could not be parsed into street, city, state strings"  # noqa: E501
 
         finally:
             parsed_list.append(parsed)
@@ -88,13 +88,12 @@ def get_xml(parsed_addresses: list, user_id=USER_ID) -> str:
         zip5 and zip4 values
     """
 
-    xml_addys = '<?xml version="1"?>'
+    xml_addys = f'<?xml version="1"?>\n\t<AddressValidateRequest USERID="{user_id}">\n\t\t<Revision>1</Revision>'  # noqa: E501
     counter = 0
 
     for addy in parsed_addresses:
 
         if isinstance(addy, tuple):
-
             mini_xml = f'''\
                 <Address ID="{counter}">
                     <Address1>{addy[0]}</Address1>
@@ -105,13 +104,13 @@ def get_xml(parsed_addresses: list, user_id=USER_ID) -> str:
                     <Zip4/>
                 </Address>'''
 
-            xml_addys += mini_xml
+            xml_addys = xml_addys + mini_xml
             counter += 1
 
         else:
-            pass
+            counter += 1
 
-    xml_addys += '</AddressValidateRequest>'
+    xml_addys = xml_addys + '\n</AddressValidateRequest>'
 
     xml_formatted_addys = xml_addys.replace("\n", "").replace("\t", "")
 
@@ -140,7 +139,7 @@ def get_zips(xml_str: str) -> list:
     output = []
 
     # parse out zip5 and zip4 values and add to output list
-    for struct in root.findall("address"):
+    for struct in root.findall("Address"):
         output.append(f"{struct.find('Zip5').text}-{struct.find('Zip4').text}")
 
     return output
