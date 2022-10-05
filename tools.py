@@ -66,13 +66,12 @@ def get_address_values(addy_list: list) -> list:
             parsed = \
                 "Address value could not be parsed into street, city, state strings"  # noqa: E501
 
-        finally:
-            parsed_list.append(parsed)
+        parsed_list.append(parsed)
 
     return parsed_list
 
 
-def get_xml(parsed_addresses: list) -> str:
+def get_xml(parsed_addresses: list) -> list:
     """
     Uses values from tuple containing address to make a single API call
     for zip5 and zip4 values
@@ -90,7 +89,7 @@ def get_xml(parsed_addresses: list) -> str:
 
     # create a counter to determine version number
     counter = 0
-    output = [""] * len(parsed_addresses)
+    output = [0] * len(parsed_addresses)
 
     # loop through parsed address input list
     for key, value in enumerate(parsed_addresses):
@@ -168,10 +167,10 @@ def get_zips(xml_str: list, user_id=USER_ID) -> list:
     # create counter to iterate through root xml response
     # create variable to house iteration of Address response
     counter = 0
-    zips = root.findall("Address")[counter]
+    zips = root.findall("Address")
 
     # loop through values in length of output array
-    for num in range(len(output)):
+    for num in range(0, len(output)):
 
         # if element is 0, then replace it with
         # the 9 digit zip code
