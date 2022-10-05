@@ -36,7 +36,7 @@ def single_address_finder():
     else:
         # if address check is a string, return the error
         if isinstance(address_tup[0], str):
-            return address_tup[0]
+            zip_codes = address_tup
 
         else:
             # turn tuple of address values into xml
@@ -68,38 +68,53 @@ def upload_bulk_file():
         uploaded_file.save(buffer)
         buffer.seek(0)
 
-        # if file is too large, go to error page
-        if buffer.seek(0, os.SEEK_END) > MAX_CONTENT_LENGTH:
-            return render_template("too_large.html")
-
     else:
         # if file extension is not accepted, go to this page
         return render_template("bad_filename.html")
+
+    # if file is too large, go to error page
+    if buffer.seek(0, os.SEEK_END) > MAX_CONTENT_LENGTH:
+        return render_template("too_large.html")
 
     # read file into file buffer using csv reader
     reader = csv.reader(buffer.getvalue().decode("UTF-8"))
 
     # turn reader object into list
-    data = list(reader)
+    data = [value[0] for value in list(reader) if value]
 
-    # zip data with numerical range
-    zipped_data = list(zip(range(0, len(data)), data))
-
-    # create empty dict for new data
-    data_dict = {}
-
-    # loop through zipped data and query each address
-    for tupe in zipped_data:
-        if tupe[1]:
-            data_dict[tupe[0]] = [tupe[1][0], "new_val"]
+    # filter out random blanks
+    data = list(filter(None, data))
 
     # create string file buffer
     csvfile = StringIO()
     writer = csv.writer(csvfile)
 
+    data_dict = {
+        str(index): [data[index: index + 5]]
+        for index in range(0, len(data), 5)
+    }
+
+    for key, value in data_dict.items():
+        data_dict[key] = value + [tools.get_address_values(value[0])]
+
+    for key, value in data_dict.items():
+        data_dict[key] = value + [tools.get_xml(value[1])]
+
+    for key, value in data_dict.items():
+        data_dict[key] = value + [tools.get_zips(value[2])]
+
+    print(data_dict.get("0"))
+
     # parse values from data_dict into file buffer
     for value in data_dict.values():
-        writer.writerow([value[0], value[1]])
+        temp = 0
+        while temp < len(value[0]):
+            x = value[0][temp]
+            y = value[1][temp]
+            z = value[2][temp]
+            q = value[3][temp]
+            writer.writerow([x, y, z, q])
+            temp += 1
 
     # go to start of string file buffer
     csvfile.seek(0)
