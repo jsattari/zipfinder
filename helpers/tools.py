@@ -64,7 +64,7 @@ def get_address_values(addy_list: list) -> list:
             parsed = re.findall(pattern, addy)[0]
 
         except TypeError:
-            logger.info(f"=== {addy} IS NOT AN ADDRESS-LIKE STRING ===")
+            logger.info(f"=== '{addy}' IS NOT AN ADDRESS-LIKE STRING ===")
             parsed = f"{addy} is not an address-like string"
 
         except ValueError:
@@ -73,7 +73,7 @@ def get_address_values(addy_list: list) -> list:
 
         except IndexError:
             logger.info(
-                f"=== {addy} COULD NOT BE PARSED INTO STREET, CITY, AND STATE STRINGS ===")  # noqa: E501
+                f"=== '{addy}' COULD NOT BE PARSED INTO STREET, CITY, AND STATE STRINGS ===")  # noqa: E501
             parsed = \
                 f"{addy} value could not be parsed into street, city, state strings"  # noqa: E501
 
@@ -210,22 +210,28 @@ def get_zips(xml_str: list, user_id=USER_ID) -> list:
         # the 9 digit zip code
         if output[num] == "0":
 
-            zip_five = address_blob[counter].find('Zip5')
+            try:
+                # break out zip5 and zip4 values
+                zip_five = address_blob[counter].find('Zip5')
 
-            zip_four = address_blob[counter].find('Zip4')
+                zip_four = address_blob[counter].find('Zip4')
 
-            # force variable types on both variables.text methods
-            output[num] = \
-                str(zip_five.text) + "-" + str(zip_four.text)  # type: ignore
+            except Exception as e:
+                output[num] = f"Error: {e}"
 
-            logger.info(f"=== SUCCESSFULLY PARSED {output[num]}")  # noqa: E501
+            else:
+                # force variable types on both variables.text methods
+                output[num] = \
+                    f"{zip_five.text}-{zip_four.text}"  # type: ignore
 
-            # increment counter
-            counter += 1
+                # increment counter
+                counter += 1
 
         else:
             # else element should already have an error string
             # associated with it, so just skip it
             continue
+
+    logger.info(f"=== SUCCESSFULLY PARSED {output[num]}")  # noqa: E501
 
     return output
