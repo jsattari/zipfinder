@@ -34,17 +34,17 @@ def test_get_address_values(address, results):
 
 def test_get_address_values_error():
     assert get_address_values(["cnn.com"]) == [
-        "Address value could not be parsed into street, city, state strings"]
+        "cnn.com value could not be parsed into street, city, state strings"]
 
 
 def test_get_address_values_error2():
     assert get_address_values(["los angeles, ca"]) == [
-        "Address value could not be parsed into street, city, state strings"]
+        "los angeles, ca value could not be parsed into street, city, state strings"]  # noqa: E501
 
 
 def test_get_address_values_error3():
     assert get_address_values(["couch, LA"]) == [
-        "Address value could not be parsed into street, city, state strings"]
+        "couch, LA value could not be parsed into street, city, state strings"]
 
 
 def test_get_address_values_error4():
