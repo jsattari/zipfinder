@@ -25,7 +25,9 @@ def test_allowed_file(filename, results):
          [("400 W Fake St #300", "Los Santos", "CA")]),
         (["123 Fake Street, Springfield, IL", "40 Terrace, westerfield, CA"],
          [("123 Fake Street", "Springfield", "IL"),
-         ("40 Terrace", "westerfield", "CA")])
+         ("40 Terrace", "westerfield", "CA")]),
+        (["5735 West Shangri-la Road, GLENDALE AZ 85304"],
+         [("5735 West Shangri-la Road", "GLENDALE", "AZ")])
     ]
 )
 def test_get_address_values(address, results):
