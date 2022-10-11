@@ -48,7 +48,7 @@ def get_address_values(addy_list: list) -> list:
     # zip codes can be included as it will not cause parsing issues
     # commas are used as delimiters
     pattern = \
-        r"(^\d+\s{1}[\s?a-zA-Z0-9\#.\-]+)\W{1,2}([a-zA-Z\s.]+)\W{1,2}([a-zA-Z]{0,2})"  # noqa: E501
+        r"(^\d+\s{1}[\s?a-zA-Z0-9\#.\-]+)\W{1,2}([a-zA-Z\s.]+)\W{1,2}([a-zA-Z]{2})"  # noqa: E501
 
     # creat empty data structure to house output
     parsed_list = []
@@ -152,7 +152,7 @@ def get_zips(xml_str: list, user_id=USER_ID) -> list:
 
     logger.info("=== PREPARING XML REQUEST STRINGS ===")
     for key, value in enumerate(xml_str):
-        if "\n" in value:
+        if "<" in value:
             xml_addys = xml_addys + value
 
         else:
